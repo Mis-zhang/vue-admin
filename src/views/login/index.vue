@@ -58,7 +58,7 @@
 						<el-col :span="15">
 							<el-input
 								type="text"
-								v-model.number="ruleForm.code"
+								v-model="ruleForm.code"
 								minlength="6"
 								maxlength="6"
 							></el-input>
@@ -87,11 +87,12 @@ import {
 	validatePass,
 	validateCodes,
 } from "../../utils/validate.js";
+import { reactive, ref, onMounted } from "@vue/composition-api";
 export default {
 	name: "login",
-	data() {
+	setup(props, { refs }) {
 		// 验证用户名
-		var validateUsername = (rule, value, callback) => {
+		let validateUsername = (rule, value, callback) => {
 			if (value === "") {
 				callback(new Error("请输入用户名"));
 			} else if (!validateEmail(value)) {
@@ -101,10 +102,10 @@ export default {
 			}
 		};
 		// 验证密码
-		var validatePassword = (rule, value, callback) => {
+		let validatePassword = (rule, value, callback) => {
 			// 过滤后的数据
-			this.ruleForm.password = stripscript(value);
-			value = this.ruleForm.password;
+			ruleForm.password = stripscript(value);
+			value = ruleForm.password;
 			if (value === "") {
 				callback(new Error("请输入密码"));
 			} else if (!validatePass(value)) {
@@ -114,27 +115,27 @@ export default {
 			}
 		};
 		// 验证重复密码
-		var validatePasswords = (rule, value, callback) => {
+		let validatePasswords = (rule, value, callback) => {
 			//如果模块值是login的话直接通过
-			if (this.model === "login") {
+			if (model.value === "login") {
 				callback();
 			}
 			// 过滤后的数据
-			this.ruleForm.passwords = stripscript(value);
-			value = this.ruleForm.passwords;
+			ruleForm.passwords = stripscript(value);
+			value = ruleForm.passwords;
 			if (value === "") {
 				callback(new Error("请再次输入密码"));
-			} else if (value != this.ruleForm.password) {
+			} else if (value != ruleForm.password) {
 				callback(new Error("重复密码不正确"));
 			} else {
 				callback();
 			}
 		};
 		// 验证验证码
-		var validateCode = (rule, value, callback) => {
+		let validateCode = (rule, value, callback) => {
 			//过滤后的数据
-			this.ruleForm.code = stripscript(value);
-			value = this.ruleForm.code;
+			ruleForm.code = stripscript(value);
+			value = ruleForm.code;
 			if (value === "") {
 				return callback(new Error("请输入验证码"));
 			} else if (!validateCodes(value)) {
@@ -143,41 +144,36 @@ export default {
 				callback();
 			}
 		};
-		return {
-			menuTab: [
-				{ txt: "登录", current: true, type: "login" },
-				{ txt: "注册", current: false, type: "register" },
-			],
-			//模块值
-			model: "login",
-			//表单的数据
-			ruleForm: {
-				username: "",
-				password: "",
-				passwords: "",
-				code: "",
-			},
-			rules: {
-				username: [{ validator: validateUsername, trigger: "blur" }],
-				password: [{ validator: validatePassword, trigger: "blur" }],
-				passwords: [{ validator: validatePasswords, trigger: "blur" }],
-				code: [{ validator: validateCode, trigger: "blur" }],
-			},
-		};
-	},
-	components: {},
-	created() {},
-	mounted() {},
-	methods: {
-		toggleMenu(data) {
-			this.menuTab.forEach((item) => {
+
+		const menuTab = reactive([
+			{ txt: "登录", current: true, type: "login" },
+			{ txt: "注册", current: false, type: "register" },
+		]);
+		const model = ref("login");
+
+		const ruleForm = reactive({
+			username: "",
+			password: "",
+			passwords: "",
+			code: "",
+		});
+		const rules = reactive({
+			username: [{ validator: validateUsername, trigger: "blur" }],
+			password: [{ validator: validatePassword, trigger: "blur" }],
+			passwords: [{ validator: validatePasswords, trigger: "blur" }],
+			code: [{ validator: validateCode, trigger: "blur" }],
+		});
+
+		const toggleMenu = (data) => {
+			console.log(data);
+			menuTab.forEach((item) => {
 				item.current = false;
 			});
 			data.current = true;
-			this.model = data.type;
-		},
-		submitForm(formName) {
-			this.$refs[formName].validate((valid) => {
+			model.value = data.type;
+		};
+		const submitForm = (formName) => {
+			refs[formName].validate((valid) => {
 				if (valid) {
 					alert("submit!");
 				} else {
@@ -185,7 +181,18 @@ export default {
 					return false;
 				}
 			});
-		},
+		};
+
+		onMounted(() => {});
+
+		return {
+			menuTab,
+			model,
+			ruleForm,
+			rules,
+			toggleMenu,
+			submitForm,
+		};
 	},
 };
 </script>
